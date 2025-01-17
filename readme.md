@@ -949,15 +949,17 @@ cd ~
 #git clone 本repo
 git clone https://github.com/InternLM/Tutorial.git -b camp4
 mkdir -p /root/finetune && cd /root/finetune
-conda create -n xtuner0121 python=3.10 -y
-conda activate xtuner0121
+conda create -n xtuner python=3.10 -y
+conda activate xtuner
 # 安装 XTuner
 git clone https://github.com/InternLM/xtuner.git
 cd /root/finetune/xtuner
 
 pip install  -e '.[all]'
-pip install torch==2.4.1 torchvision==0.19.1 torchaudio==2.4.1 --index-url https://download.pytorch.org/whl/cu121
-pip install transformers==4.39.0
+# 如果出现 command error: 'cannot import name 'log' from 'torch.distributed.elastic.agent.server.api' (/root/.conda/envs/xtuner/lib/python3.10/site-packages/torch/distributed/elastic/agent/server/api.py)'!或者出现：“command error: 'cannot import name 'EncoderDecoderCache' from 'transformers' (/root/.conda/envs/xtunerlx/lib/python3.10/site-packages/transformers/__init__.py)'!”报错，建议安装下面的torch版本和transformers版本4.47.1，后面运行个人小助手的模型时候，可能还需要调整teansformers版本。
+pip install torch==2.1.0+cu121 torchvision==0.16.0+cu121 torchaudio==2.1.0+cu121 --index-url https://download.pytorch.org/whl/cu121
+pip install transformers==4.47.1
+pip install streamlit==1.36.0
 # 安装出现“Could not find a version that satisfies the requirement bitsandbytes>=0.40.0.post4 (from xtuner) (from versions: none)”，直接Ctrl+C退出执行
 pip install --trusted-host mirrors.aliyun.com -e '.[deepspeed]' -i https://mirrors.aliyun.com/pypi/simple/
 ```
@@ -1072,13 +1074,13 @@ alpaca_en = dict(
     use_varlen_attn=use_varlen_attn)
 # 开启微调
 cd /root/finetune
-conda activate xtuner0121
+conda activate xtuner
 
 xtuner train ./config/internlm2_5_chat_7b_qlora_alpaca_e3_copy.py --deepspeed deepspeed_zero2 --work-dir ./work_dirs/assistTuner
 # 转换权重文件
 cd /root/finetune/work_dirs/assistTuner
 
-conda activate xtuner0121
+conda activate xtuner
 
 # 先获取最后保存的一个pth文件
 pth_file=`ls -t /root/finetune/work_dirs/assistTuner/*.pth | head -n 1 | sed 's/:$//'`
@@ -1087,7 +1089,7 @@ export MKL_THREADING_LAYER=GNU
 xtuner convert pth_to_hf ./internlm2_5_chat_7b_qlora_alpaca_e3_copy.py ${pth_file} ./hf
 # 模型合并
 cd /root/finetune/work_dirs/assistTuner
-conda activate xtuner0121
+conda activate xtuner
 
 export MKL_SERVICE_FORCE_INTEL=1
 export MKL_THREADING_LAYER=GNU
@@ -1112,6 +1114,8 @@ ssh -CNg -L 8501:127.0.0.1:8501 root@ssh.intern-ai.org.cn -p *****
 ![](./image/41.png)
 
 ![](./image/39.png)
+
+
 
 ### 总结
 
